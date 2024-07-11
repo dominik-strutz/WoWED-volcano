@@ -7,3 +7,4 @@ zuko
 utm
 ipympl
 bqplot
+pygad
