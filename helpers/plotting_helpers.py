@@ -94,7 +94,7 @@ def plot_slice_N(
         
     ax.plot(surface_data['E']*1e-3,
             surface_data['topography'].sel(
-                N=slice_N, method='nearest')*1e-3, 'k', lw=1)
+                N=slice_N, method='nearest')*1e-3, 'k', lw=1, zorder=20)
     
     if labels:
         ax.set_xlabel('E [km]')
@@ -132,7 +132,7 @@ def plot_slice_E(
     
     ax.plot(surface_data['N']*1e-3,
             surface_data['topography'].sel(
-                E=slice_E, method='nearest')*1e-3, 'k', lw=1)
+                E=slice_E, method='nearest')*1e-3, 'k', lw=1, zorder=20)
     
     if labels:
         ax.set_xlabel('N [km]')
@@ -230,22 +230,23 @@ def plot_posterior_model(
         ax_dict['prior_marginal_Z'], surface_data['topography'])
     plot_marginal_Z(
         ax_dict['prior_marginal_Z'], posterior_data, surface_data, true_event[0], true_event[1],
-        cmap=red_cmap, type='imshow',
-        vmin=posterior_data.min()+0.1*(posterior_data.max()-posterior_data.min()),
-        vmax=posterior_data.max())
+        cmap='Reds', type='contour', levels=3, zorder=11,
+        # vmin=posterior_data.min()+0.1*(posterior_data.max()-posterior_data.min()),
+        # vmax=posterior_data.max()
+        )
             
     ax_dict['prior_marginal_Z'].set_title('Z marginal')
     
     # dummy for legend
     ax_dict['prior_marginal_Z'].scatter(
         [], [], s=50, marker='o', linewidth=1.5, alpha=1,
-        facecolors='none', edgecolors='darkred',label='posterior pdf'
+        facecolors='darkred', edgecolors='darkred',label='posterior pdf'
         )
     
     if std is not None:
         circle = plt.Circle(
             (true_event[0]*1e-3, true_event[1]*1e-3), std*1e-3, color='k', fill=False,
-            linestyle='-', linewidth=1.0, zorder=10)
+            linestyle='-', linewidth=0.5, zorder=9)
         ax_dict['prior_marginal_Z'].add_artist(circle)
         
         # dummy for legend
@@ -267,6 +268,17 @@ def plot_posterior_model(
             label='array' if 'array' in sta_type else 'node'
         )
     
+    ax_dict['prior_slice_E'].scatter(
+        [],
+        [],
+        s=50,
+        marker='*',
+        c='black',
+        linewidth=0,
+        alpha=1.0,
+        label='true event'
+    )
+            
     # remove duplicate labels
     handles, labels = ax_dict['prior_marginal_Z'].get_legend_handles_labels()
     by_label = dict(list(zip(labels, handles))[::-1])
@@ -276,15 +288,14 @@ def plot_posterior_model(
         by_label.values(), by_label.keys(),
         facecolor='w', edgecolor='k',
         loc='upper center', bbox_to_anchor=(1.0, -0.1),
-        ncol=4
+        ncol=5
     )                                       
-    
                 
     fig.suptitle(f'{vulcano_data["Volcano Name"]}: prior model', fontsize=12)
         
     plot_slice_E(
         ax_dict['prior_slice_E'], posterior_data, surface_data, true_event[0],
-        aspect=2, cmap=red_cmap, type='imshow',
+        aspect=2, cmap='Reds', type='contour', levels=3, zorder=9,
         vmin=posterior_data.min()+0.1*(posterior_data.max()-posterior_data.min()),
         vmax=posterior_data.max())
     
@@ -295,22 +306,22 @@ def plot_posterior_model(
     if std is not None:
         circle = plt.Circle(
             (true_event[1]*1e-3, true_event[2]*1e-3), std*1e-3, color='black', fill=False,
-            linewidth=1.0, zorder=10)
+            linewidth=0.5, zorder=10)
         ax_dict['prior_slice_E'].add_artist(circle)
 
     ax_dict['prior_slice_E'].scatter(
         true_event[1]*1e-3,
         true_event[2]*1e-3,
-        s=100,
+        s=50,
         marker='*',
-        c='darkred',
+        c='black',
         linewidth=0,
         alpha=1.0
     )
 
     plot_slice_N(
         ax_dict['prior_slice_N'], posterior_data, surface_data, true_event[1],
-        aspect=2, cmap=red_cmap, type='imshow',
+        aspect=2, cmap='Reds', type='contour', levels=3, zorder=9,
         vmin=posterior_data.min()+0.1*(posterior_data.max()-posterior_data.min()),
         vmax=posterior_data.max())
     
@@ -321,15 +332,15 @@ def plot_posterior_model(
     if std is not None:
         circle = plt.Circle(
             (true_event[0]*1e-3, true_event[2]*1e-3), std*1e-3, color='black', fill=False,
-            linewidth=1.0, zorder=10)
+            linewidth=0.5, zorder=10)
         ax_dict['prior_slice_N'].add_artist(circle)
 
     ax_dict['prior_slice_N'].scatter(
         true_event[0]*1e-3,
         true_event[2]*1e-3,
-        s=100,
+        s=50,
         marker='*',
-        c='darkred',
+        c='black',
         linewidth=0,
         alpha=1.0
     )
