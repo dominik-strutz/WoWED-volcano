@@ -1,0 +1,81 @@
+### LINES
+lines.linewidth         : 1.4
+patch.linewidth         : 0.8
+lines.markersize        : 5.6
+lines.markeredgewidth   : 1.4
+
+
+# Use serif fonts
+font.serif : Computer Modern Serif, DejaVu Serif, cmr10
+font.family : serif
+axes.formatter.use_mathtext : True
+mathtext.fontset : stix
+# text.usetex: True
+
+
+# BACKGROUNDS
+# turn off all backgrounds
+figure.facecolor   : (1,1,1,0.0)
+axes.facecolor     : (1,1,1,0.0)
+savefig.facecolor  : (1,1,1,0.0)
+patch.facecolor    : 0072B2
+
+### AXES
+axes.linewidth      : 1.0
+axes.grid           : False
+axes.titlesize      : 9.6
+axes.labelsize      : 8.8
+axes.formatter.limits         : -5, 5
+axes.formatter.useoffset      : False
+axes.prop_cycle: cycler('color', ['377eb8', 'ff7f00', '4daf4a', 'f781bf', 'a65628', '984ea3', '999999', 'e41a1c', 'dede00'])
+
+### TICKS
+xtick.top            : True
+ytick.right          : True
+
+xtick.major.pad      : 5.6
+xtick.major.size     : 6
+xtick.minor.visible  : True
+xtick.minor.size     : 3
+xtick.major.width    : 0.8
+xtick.minor.width    : 0.4
+xtick.labelsize      : 8.0
+xtick.direction      : in
+
+ytick.major.pad      : 5.6
+ytick.major.size     : 6
+ytick.minor.visible  : True
+ytick.minor.size     : 3
+ytick.major.width    : 1.0
+ytick.minor.width    : 0.5
+ytick.labelsize      : 8.0
+ytick.direction      : in
+
+### GRIDS
+grid.linewidth: 0.8
+
+
+### Legend
+legend.numpoints     : 1
+legend.fontsize      : 8.0
+legend.frameon       : True
+legend.facecolor     : 'none'
+legend.edgecolor     : (0, 0, 0, 0)     # background patch boundary color
+legend.framealpha    : 1.0      # legend patch transparency
+
+legend.scatterpoints : 1
+legend.borderaxespad: 2.0 
+
+### FIGURE
+figure.titlesize : large
+figure.figsize   : 6.4, 4.4
+figure.dpi       : 150
+
+### ERRORBAR PLOTS
+errorbar.capsize : 3
+
+### SAVING FIGURES
+savefig.dpi        : 150
+savefig.format     : pdf
+savefig.bbox       : tight
+pdf.fonttype       : 42

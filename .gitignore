@@ -1,0 +1,11 @@
+.opentopography.txt
+/libraries
+/cache
+/jupyter_lite
+/legacy
+
+**/.pytest_cache
+**/__pycache__
+**/*.pyc
+
+**/*.tif

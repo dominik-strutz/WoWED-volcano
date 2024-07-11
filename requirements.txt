@@ -1,0 +1,9 @@
+scipy
+shapely
+scikit-learn
+scikit-image
+xarray
+zuko
+utm
+ipympl
+bqplot
