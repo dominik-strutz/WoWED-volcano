@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-import torch
 from skimage import measure
 from scipy.interpolate import interp1d
 
@@ -435,6 +434,8 @@ def interactive_design_plot(
     eig_criterion,
     prior_information
     ):
+    
+    import torch
     
     changing_design = list(original_design.copy())
     changing_design = [[sta_type, np.array(sta_data)] for sta_type, sta_data in changing_design]
