@@ -10,8 +10,6 @@ import xarray as xr
 from PIL import Image
 from io import BytesIO
 
-import utm
-
 def get_vulcanoe_data(vulcanoe_name):
     '''
     Get vulcanoe data from the Global Volcanism Program database.
@@ -46,7 +44,7 @@ def get_vulcanoe_data(vulcanoe_name):
 
     try:
         volcanoe_data = volcanoe_data[volcanoe_data['Volcano Name'] == vulcanoe_name].to_dict('records')[0]
-    except:
+    except IndexError:
         raise ValueError(f'Vulcanoe {vulcanoe_name} not found. Check the https://volcano.si.edu/ database for the correct name.')
     
     volcanoe_data['location'] = (volcanoe_data['Latitude'], volcanoe_data['Longitude'])
