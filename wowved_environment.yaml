@@ -15,7 +15,8 @@ dependencies:
 - pandas
 - xarray
 
-# ML libraries 
+# ML libraries
+- cpuonly
 - pytorch
 
 # plotting
