@@ -1,6 +1,7 @@
 # run: conda env create --file environment.yml
 name: wowved_24_06
 channels:
+  - defaults
   - pytorch
   - conda-forge
 dependencies:
@@ -17,7 +18,7 @@ dependencies:
 
 # ML libraries
 - cpuonly
-- pytorch
+- pytorch-cpu
 
 # plotting
 - matplotlib
