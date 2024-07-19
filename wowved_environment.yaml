@@ -1,8 +1,6 @@
 # run: conda env create --file environment.yml
 name: wowved_24_06
 channels:
-  - defaults
-  - pytorch
   - conda-forge
 dependencies:
 
@@ -36,7 +34,6 @@ dependencies:
 - pygad
 
 - pip:
-  - zuko
   - utm
   - ipympl
   - bqplot
