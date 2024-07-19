@@ -1,5 +1,5 @@
 from __future__ import division
-from utm.error import OutOfRangeError
+from libs.utm.error import OutOfRangeError
 
 # For most use cases in this module, numpy is indistinguishable
 # from math, except it also works on numpy arrays
