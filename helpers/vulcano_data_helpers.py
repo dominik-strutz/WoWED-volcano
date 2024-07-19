@@ -10,7 +10,7 @@ import xarray as xr
 from PIL import Image
 from io import BytesIO
 
-import utm
+from libs import utm
 
 def get_vulcanoe_data(vulcanoe_name):
     '''
