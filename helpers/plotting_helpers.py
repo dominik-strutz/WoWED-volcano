@@ -8,7 +8,7 @@ from scipy.interpolate import interp1d
 import bqplot.pyplot as bqp_plt
 from bqplot import ColorScale
 
-from helpers.vulcano_data_helpers import get_elevation
+from helpers.volcano_data_helpers import get_elevation
 
 blue_cmap = plt.cm.Blues
 blue_cmap = blue_cmap(np.arange(blue_cmap.N))
@@ -217,7 +217,7 @@ def plot_prior_model(PRIOR_DATA, SURFACE_DATA, VULCANO_DATA, show=True):
     return fig, ax_dict
 
 def plot_posterior_model(
-    design, posterior_data, surface_data, vulcano_data,
+    design, posterior_data, surface_data, volcano_data,
     true_event, std=None, show=True):
     
     fig, ax_dict = plt.subplot_mosaic(
@@ -290,7 +290,7 @@ def plot_posterior_model(
         ncol=5
     )                                       
                 
-    fig.suptitle(f'{vulcano_data["Volcano Name"]}: prior model', fontsize=12)
+    fig.suptitle(f'{volcano_data["Volcano Name"]}: prior model', fontsize=12)
         
     plot_slice_E(
         ax_dict['prior_slice_E'], posterior_data, surface_data, true_event[0],
@@ -428,7 +428,7 @@ def plot_design(ax, design):
 
 def interactive_design_plot(
     original_design,
-    vulcano_data,
+    volcano_data,
     surface_data,
     design_space_dict,
     eig_criterion,
@@ -440,7 +440,7 @@ def interactive_design_plot(
     changing_design = list(original_design.copy())
     changing_design = [[sta_type, np.array(sta_data)] for sta_type, sta_data in changing_design]
 
-    fig = bqp_plt.figure(figsize=(12, 12), title=f'{vulcano_data["Volcano Name"]}: optimal design', min_aspect_ratio=1, max_aspect_ratio=1,
+    fig = bqp_plt.figure(figsize=(12, 12), title=f'{volcano_data["Volcano Name"]}: optimal design', min_aspect_ratio=1, max_aspect_ratio=1,
                         #  legend_location="top-right", legend_style={"fill": "white", "stroke": "black"}
     )
     

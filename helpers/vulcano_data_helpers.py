@@ -12,23 +12,23 @@ from io import BytesIO
 
 from libs import utm
 
-def get_vulcanoe_data(vulcanoe_name):
+def get_volcano_data(volcano_name):
     '''
-    Get vulcanoe data from the Global Volcanism Program database.
+    Get volcano data from the Global Volcanism Program database.
     
     Parameters
     ----------
-    vulcanoe_name : str
-        The name of the vulcanoe.
+    volcano_name : str
+        The name of the volcano.
         
     Returns
     -------
     dict
-        A dictionary containing the vulcanoe data.
+        A dictionary containing the volcano data.
         
     Example
     -------
-    >>> get_vulcanoe_data('Kilauea')
+    >>> get_volcano_data('Kilauea')
     {'Volcano Number': 332010,
      'Volcano Name': 'Kilauea',
      'Primary Volcano Type': 'Shield',
@@ -45,9 +45,9 @@ def get_vulcanoe_data(vulcanoe_name):
         re.sub(r'\([^)]*\)', '', t) for t in volcanoe_data['Primary Volcano Type'].values]
 
     try:
-        volcanoe_data = volcanoe_data[volcanoe_data['Volcano Name'] == vulcanoe_name].to_dict('records')[0]
+        volcanoe_data = volcanoe_data[volcanoe_data['Volcano Name'] == volcano_name].to_dict('records')[0]
     except IndexError:
-        raise ValueError(f'Vulcanoe {vulcanoe_name} not found. Check the https://volcano.si.edu/ database for the correct name.')
+        raise ValueError(f'Volcanoe {volcano_name} not found. Check the https://volcano.si.edu/ database for the correct name.')
     
     volcanoe_data['location'] = (volcanoe_data['Latitude'], volcanoe_data['Longitude'])
     volcanoe_data['lat'], volcanoe_data['lon'] = volcanoe_data['location']
@@ -79,7 +79,7 @@ def grid_latlon2utm(lat, lon):
         return E, N
     
 def fetch_topography_data(
-    vulcano_data, bounding_box,
+    volcano_data, bounding_box,
     api_key='demoapikeyot2022', demtype='SRTM15Plus',
     cells_per_dimension=128):
 
@@ -90,7 +90,7 @@ def fetch_topography_data(
     else:
         raise ValueError('Invalid bounding box. Use "min_lat", "max_lat", "min_lon", "max_lon" or "extent_south", "extent_noth", "extent_west", "extent_east"')
 
-    center = vulcano_data['location']
+    center = volcano_data['location']
     if bounding_box_type == 'latlon':
         south = bounding_box['min_lat']
         north = bounding_box['max_lat']
@@ -183,7 +183,7 @@ def fetch_topography_data(
 
 
 def construct_highly_opinionated_prior(
-    vulcano_data, surface_data, depth_min,
+    volcano_data, surface_data, depth_min,
     center_location,
     max_distance_hor=None,
     max_distance_vert=None,
