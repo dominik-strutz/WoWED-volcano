@@ -10,6 +10,8 @@ import xarray as xr
 from PIL import Image
 from io import BytesIO
 
+import utm
+
 def get_vulcanoe_data(vulcanoe_name):
     '''
     Get vulcanoe data from the Global Volcanism Program database.

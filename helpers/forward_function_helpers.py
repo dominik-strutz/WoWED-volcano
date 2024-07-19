@@ -185,9 +185,7 @@ class Forward_Function:
                 cov = np.ones((slowness.shape))            
                 cov *= (self.baz_std/180 * np.pi)**2
             else:
-                cov = np.ones((slowness.shape)) 
-                cov[0] *= self.p_x_std**2
-                cov[1] *= self.p_y_std**2
+                raise ValueError('Only degrees are supported when using array_baz_only')
                 
         else:
             incidence = 90 - np.rad2deg(np.arcsin(
