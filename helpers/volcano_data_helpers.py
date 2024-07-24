@@ -69,9 +69,11 @@ def grid_latlon2utm(lat, lon):
     y_coor[:, 0] = lon[0]
     y_coor[:, 1] = lat
 
-    E, _, _, _ = utm.from_latlon(x_coor[:, 1], x_coor[:, 0])
-    _, N, _, _ = utm.from_latlon(y_coor[:, 1], y_coor[:, 0])
-
+    try:
+        E, _, _, _ = utm.from_latlon(x_coor[:, 1], x_coor[:, 0])
+        _, N, _, _ = utm.from_latlon(y_coor[:, 1], y_coor[:, 0])
+    except ValueError:
+        raise ValueError('Latitude and longitude conversion does not allow for latitudes to cross the equator. Feel free to submit a pull request to fix this issue.')
     del x_coor, y_coor
     if N[0] < N[-1]:
         return E, N[::-1]
@@ -81,7 +83,7 @@ def grid_latlon2utm(lat, lon):
 def fetch_topography_data(
     volcano_data, bounding_box,
     api_key='demoapikeyot2022', demtype='SRTM15Plus',
-    cells_per_dimension=128):
+    cells_per_dimension=256):
 
     if set(['min_lat', 'max_lat', 'min_lon', 'max_lon']) == set(bounding_box.keys()):
         bounding_box_type = 'latlon'
