@@ -3,6 +3,8 @@
 /cache
 /jupyter_lite
 /legacy
+/figures
+/local_tests
 
 **/.pytest_cache
 **/__pycache__
