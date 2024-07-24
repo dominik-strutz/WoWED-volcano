@@ -777,7 +777,7 @@ def interactive_design_plot_posterior(
             contour[:,1] = fy(contour[:,1])
                 
         for c in ds_nodes_cs:
-            bqp_plt.plot(c[:,0], c[:,1], colors=['grey'], stroke_width=1, opacity=0.5)
+            bqp_plt.plot(c[:,0], c[:,1], colors=['gray'], stroke_width=1, opacity=0.5)
         
     if 'array' in unique_types:
         bqp_plt.scatter(
@@ -793,7 +793,7 @@ def interactive_design_plot_posterior(
             contour[:,1] = fy(contour[:,1])
 
         for c in  ds_array_cs:
-            bqp_plt.plot(c[:,0], c[:,1], colors=['grey'], stroke_width=1, opacity=0.5)
+            bqp_plt.plot(c[:,0], c[:,1], colors=['gray'], stroke_width=1, opacity=0.5)
 
 
     eig = eig_criterion(changing_design)        
