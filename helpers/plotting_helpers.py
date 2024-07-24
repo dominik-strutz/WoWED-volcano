@@ -595,38 +595,44 @@ def interactive_design_plot_plain(
         )
     def update_line(_scatter , event):
     
-        with scat.hold_sync():
-            index = _scatter.names.item()
-            sta_typ = 'array' if 'array' in changing_design[index][0] else 'node'
-                    
-            new_location = np.array([event['point']['x']*1e3, event['point']['y']*1e3])
-            new_elevation = get_elevation(new_location*1e-3, surface_data)
-            new_location = np.append(new_location, new_elevation)
-            
-            if sta_typ == 'array':
-                # gradient at new location
-                new_gradient = (surface_data['grad_E'].interp(E=new_location[0], N=new_location[1]).values.item(),
-                                surface_data['grad_N'].interp(E=new_location[0], N=new_location[1]).values.item())        
-                new_normal_vector = np.array([-new_gradient[0], -new_gradient[1], 1])
-                new_normal_vector /= np.linalg.norm(new_normal_vector)
-                new_location = np.hstack((new_location, new_normal_vector))
+        # with scat.hold_sync():
+        label.text = ['Design Statistics:',
+            '',
+            '',
+            'running...',
+            ]
+        
+        index = _scatter.names.item()
+        sta_typ = 'array' if 'array' in changing_design[index][0] else 'node'
                 
-            # check if new location is in design space
-            in_ds = design_space_dict[sta_typ].sel(E=new_location[0], N=new_location[1], method='nearest').values
+        new_location = np.array([event['point']['x']*1e3, event['point']['y']*1e3])
+        new_elevation = get_elevation(new_location*1e-3, surface_data)
+        new_location = np.append(new_location, new_elevation)
+        
+        if sta_typ == 'array':
+            # gradient at new location
+            new_gradient = (surface_data['grad_E'].interp(E=new_location[0], N=new_location[1]).values.item(),
+                            surface_data['grad_N'].interp(E=new_location[0], N=new_location[1]).values.item())        
+            new_normal_vector = np.array([-new_gradient[0], -new_gradient[1], 1])
+            new_normal_vector /= np.linalg.norm(new_normal_vector)
+            new_location = np.hstack((new_location, new_normal_vector))
             
-            changing_design[index][1] = new_location
-            torch.manual_seed(0)
-            eig = eig_criterion(changing_design)
-            
-            post_information = eig + prior_information
-            k = 3
-            std = np.exp((post_information + k/2 + k/2 * np.log(2*np.pi)) / (-0.5 * k * 2))
-            
-            label.text = ['Design Statistics:',
-                        f'EIG: {eig:.3f} nats',
-                        f'Approx std: {std:.0f} m',
-                        '' if in_ds else 'Current location is not in design space',
-                        ]
+        # check if new location is in design space
+        in_ds = design_space_dict[sta_typ].sel(E=new_location[0], N=new_location[1], method='nearest').values
+        
+        changing_design[index][1] = new_location
+        torch.manual_seed(0)
+        eig = eig_criterion(changing_design)
+        
+        post_information = eig + prior_information
+        k = 3
+        std = np.exp((post_information + k/2 + k/2 * np.log(2*np.pi)) / (-0.5 * k * 2))
+        
+        label.text = ['Design Statistics:',
+                    f'EIG: {eig:.3f} nats',
+                    f'Approx std: {std:.0f} m',
+                    '' if in_ds else 'Current location is not in design space',
+                    ]
 
     for i, scat in enumerate(scat_list):
         scat.on_drag_end(update_line)
