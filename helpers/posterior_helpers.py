@@ -3,9 +3,18 @@ import xarray as xr
 import torch
 from torch.distributions import Normal, Independent
 
-def calculate_posterior(design, true_event, prior_data, forward_function):
+def calculate_posterior(design, true_event, prior_data, forward_function, downsample_size=128):
     
     tt_obs, _ = forward_function(design, true_event[None])
+    
+    if downsample_size is not None:
+        if not downsample_size == prior_data.E.size:
+            prior_data = prior_data.interp(
+                E=np.linspace(prior_data.E.min(), prior_data.E.max(), downsample_size),
+                N=np.linspace(prior_data.N.min(), prior_data.N.max(), downsample_size),
+                Z=np.linspace(prior_data.Z.min(), prior_data.Z.max(), downsample_size),
+                method='linear'
+            )
     
     source_locations = np.meshgrid(
         prior_data.E.values,
