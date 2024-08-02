@@ -26,45 +26,62 @@ red_cmap = ListedColormap(red_cmap)
 binary_cmap = ListedColormap(
     [(0.6, 0, 0, 1), (0, 0, 0, 0)])
 
-def plot_topography(ax, topo_ds):
+def plot_topography(ax, topo_array):
+    '''
+    Plot topography data in the form of a xarray.DataArray on a given axis.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axis to plot the topography data on.
+    topo_ds : xarray.DataArray
+        Topography data in the form of a xarray.DataArray. The DataArray should have
+        dimensions 'E' and 'N' for the easting and northing coordinates and the values
+        should be the elevation in meters.
+    
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axis with the topography data plotted on it.    
+    '''
+    
+    E_min, E_max = topo_array.E.min(), topo_array.E.max()
+    N_min, N_max = topo_array.N.min(), topo_array.N.max()
+    
     ax.imshow(
-        topo_ds.values.T,
+        topo_array.values.T,
         cmap="Greys",
         extent=[
-            topo_ds.E.min() * 1e-3 - topo_ds.E.mean() * 1e-3,
-            topo_ds.E.max() * 1e-3 - topo_ds.E.mean() * 1e-3,
-            topo_ds.N.min() * 1e-3 - topo_ds.N.mean() * 1e-3,
-            topo_ds.N.max() * 1e-3 - topo_ds.N.mean() * 1e-3,
+            E_min * 1e-3, E_max * 1e-3, N_min * 1e-3, N_max * 1e-3,
         ],
         origin='lower',
         alpha=0.8,
     )
     
     ax.pc = ax.contour(
-        topo_ds.E * 1e-3 - topo_ds.E.mean() * 1e-3,
-        topo_ds.N * 1e-3 - topo_ds.N.mean() * 1e-3,
-        topo_ds.values.T,
+        topo_array.E * 1e-3, topo_array.N * 1e-3,
+        topo_array.values.T,
         colors="k",
         zorder=-10,
         # levels divisions of 500 from min to max
         levels=np.arange(
-            topo_ds.values.min().round(-3), (topo_ds.values.max() + 1000).round(-3), 500
+            topo_array.values.min().round(-3), (topo_array.values.max() + 1000).round(-3), 500
         ),
-        linewidths=1.0,
-        alpha=1.0,
+        linewidths=1.0, alpha=1.0,
     )
 
     ax.cl = ax.clabel(
         ax.pc,
         levels=np.arange(
-            topo_ds.values.min().round(-3), (topo_ds.values.max() + 1000).round(-3), 500
+            topo_array.values.min().round(-3), (topo_array.values.max() + 1000).round(-3), 500
         ),
-        inline=True,
-        fontsize=8,
-        fmt="%1.0f",
-        colors="k",
-        use_clabeltext=True,
+        inline=True, fontsize=8, fmt="%1.0f", colors="k", use_clabeltext=True,
     )
+
+    ax.set_aspect("equal")
+
+    ax.set_xlabel("E [km]")
+    ax.set_ylabel("N [km]")
 
     return ax
 
@@ -194,7 +211,10 @@ def plot_marginal_Z(
         
     return ax
 
-def plot_prior_model(PRIOR_DATA, SURFACE_DATA, VOLCANO_DATA, show=True):
+def plot_prior_model(
+    PRIOR_DATA, SURFACE_DATA, VOLCANO_DATA,
+    slice_E=0, slice_N=0,
+    ):
     
     fig, ax_dict = plt.subplot_mosaic(
         [['prior_marginal_Z', 'prior_slice_E'],
@@ -205,14 +225,14 @@ def plot_prior_model(PRIOR_DATA, SURFACE_DATA, VOLCANO_DATA, show=True):
     plot_topography(
         ax_dict['prior_marginal_Z'], SURFACE_DATA['topography'])
     plot_marginal_Z(
-        ax_dict['prior_marginal_Z'], PRIOR_DATA, SURFACE_DATA, 0.0, 0.0, cmap=blue_cmap,
+        ax_dict['prior_marginal_Z'], PRIOR_DATA, SURFACE_DATA,
+        slice_E=slice_E, slice_N=slice_N,
+        cmap=blue_cmap,
         aspect=1)
     ax_dict['prior_marginal_Z'].set_title('Z marginal')
-
-    fig.suptitle(f'{VOLCANO_DATA["Volcano Name"]}: prior model', fontsize=12)
         
     plot_slice_E(
-        ax_dict['prior_slice_E'], PRIOR_DATA, SURFACE_DATA, 0.0,
+        ax_dict['prior_slice_E'], PRIOR_DATA, SURFACE_DATA, slice_E,
         cmap=blue_cmap,
         aspect='auto')
     # ax_dict['prior_slice_E'].set_title('E-W slice')
@@ -224,7 +244,7 @@ def plot_prior_model(PRIOR_DATA, SURFACE_DATA, VOLCANO_DATA, show=True):
     ax_dict['prior_slice_E'].xaxis.set_tick_params(labeltop=True, labelbottom=False, top=True, bottom=True, which='both')
     
     plot_slice_N(
-        ax_dict['prior_slice_N'], PRIOR_DATA, SURFACE_DATA, 0.0,
+        ax_dict['prior_slice_N'], PRIOR_DATA, SURFACE_DATA, slice_N,
         cmap=blue_cmap,
         aspect='auto')
     # ax_dict['prior_slice_N'].set_title('N-S slice')
@@ -234,22 +254,19 @@ def plot_prior_model(PRIOR_DATA, SURFACE_DATA, VOLCANO_DATA, show=True):
 
     ax_dict['prior_slice_N'].xaxis.tick_bottom()
     ax_dict['prior_slice_N'].xaxis.set_tick_params(labeltop=False, labelbottom=True, top=True, bottom=True, which='both')
-        
-    plt.tight_layout()
 
-    if show:    
-        plt.show()
-    
     return fig, ax_dict
 
 def plot_posterior_model(
-    design, posterior_data, surface_data, volcano_data,
-    true_event, std=None, show=True):
+    design, posterior_data, surface_data,
+    true_event, std=None,
+    E_lim=None, N_lim=None, Z_lim=None,
+    show=True):
     
     fig, ax_dict = plt.subplot_mosaic(
         [['prior_marginal_Z', 'prior_slice_E'],
         ['prior_marginal_Z', 'prior_slice_N',],], figsize=(10, 4), empty_sentinel=None, dpi=120, 
-        gridspec_kw={'width_ratios': [4,6], 'height_ratios': [1, 1]}
+        gridspec_kw={'width_ratios': [4 ,6], 'height_ratios': [1, 1]}
         )
 
     plot_topography(
@@ -292,6 +309,11 @@ def plot_posterior_model(
             label='array' if 'array' in sta_type else 'node'
         )
     
+    if E_lim is not None:
+        ax_dict['prior_marginal_Z'].set_xlim(E_lim)
+    if N_lim is not None:
+        ax_dict['prior_marginal_Z'].set_ylim(N_lim)
+    
     ax_dict['prior_slice_E'].scatter(
         [],
         [],
@@ -311,11 +333,9 @@ def plot_posterior_model(
     ax_dict['prior_marginal_Z'].legend(
         by_label.values(), by_label.keys(),
         facecolor='w', edgecolor='k',
-        loc='upper center', bbox_to_anchor=(1.5, -0.1),
+        loc='upper center', bbox_to_anchor=(1.5, -0.15),
         ncol=5
     )                                       
-                
-    fig.suptitle(f'{volcano_data["Volcano Name"]}: prior model', fontsize=12)
         
     plot_slice_E(
         ax_dict['prior_slice_E'], posterior_data, surface_data, true_event[0],
@@ -346,6 +366,10 @@ def plot_posterior_model(
         linewidth=0,
         alpha=1.0
     )
+    if E_lim is not None:
+        ax_dict['prior_slice_E'].set_xlim(E_lim)
+    if Z_lim is not None:
+        ax_dict['prior_slice_E'].set_ylim(Z_lim)
 
     plot_slice_N(
         ax_dict['prior_slice_N'], posterior_data, surface_data, true_event[1],
@@ -377,6 +401,10 @@ def plot_posterior_model(
         linewidth=0,
         alpha=1.0
     )
+    if N_lim is not None:
+        ax_dict['prior_slice_N'].set_xlim(N_lim)
+    if Z_lim is not None:
+        ax_dict['prior_slice_N'].set_ylim(Z_lim)
 
     if show:
         plt.show()
@@ -428,32 +456,38 @@ def plot_design_space_dict(
 
     return fig, ax_list
 
-def plot_design(ax, design):
+def plot_design(
+    ax, design,
+    **kwargs):
     
     unique_types = []
 
+    if ('color' not in kwargs):
+        
+        print('No color specified, using black')
+        kwargs['color'] = 'k'
+        
     for sta_type, sta_data in design:
         ax.scatter(
             sta_data[0]*1e-3,
             sta_data[1]*1e-3,
             s=150 if 'array' in sta_type else 200,
             marker='x' if 'array' in sta_type else '^',
-            c='k',
-            linewidth=4 if 'array' in sta_type else 0
+            linewidth=4 if 'array' in sta_type else 0,
+            **kwargs
         )
         for data_type in sta_type:
             if data_type not in unique_types:
                 unique_types.append(data_type)
-        
-        
-    if 'tt' in sta_type or 'asl' in sta_type:
+    
+    if 'tt' in sta_type or 'asl' in unique_types:
         ax.scatter(
             [], [], label='broadband', c='k',
             s=120,
             marker='^',
             linewidth=0,
         )
-    if 'array' in sta_type:
+    if 'array' in unique_types:
         ax.scatter(
             [], [], label='array', c='k',
             s=70,
@@ -480,6 +514,29 @@ def interactive_design_plot(
     else:
         return interactive_design_plot_plain(**kwargs)
 
+def add_gradient(surface_data):
+    '''
+    Helper function that adds gradient data to the topography data. Necessary to correctly array orientation.
+    
+    Parameters
+    ----------
+    surface_data : xr.Dataset
+        The topography data.
+        
+    Returns
+    -------
+    xr.Dataset
+        The topography data with gradient data.
+    '''
+    
+    dE = ((surface_data['E'].max() - surface_data['E'].min()) / (surface_data['E'].size - 1)).values
+    dN = ((surface_data['N'].max() - surface_data['N'].min()) / (surface_data['N'].size - 1)).values
+    
+    grad_E, grad_N = np.gradient(surface_data['topography'], dE, dN)
+    surface_data['grad_E'] = (('E', 'N'), grad_E)
+    surface_data['grad_N'] = (('E', 'N'), grad_N)
+    
+    return surface_data
 
 
 def interactive_design_plot_plain(
@@ -492,6 +549,8 @@ def interactive_design_plot_plain(
     **kwargs
     ):
         
+    surface_data = add_gradient(surface_data)
+    
     changing_design = list(original_design.copy())
     changing_design = [[sta_type, np.array(sta_data)] for sta_type, sta_data in changing_design]
 
@@ -655,6 +714,8 @@ def interactive_design_plot_posterior(
 
     from helpers.posterior_helpers import calculate_posterior
     import ipywidgets as widgets
+
+    surface_data = add_gradient(surface_data)
 
     z_initial = np.average(prior_data.Z.values, weights=prior_data.mean(['E', 'N']).values)
     

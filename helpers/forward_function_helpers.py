@@ -4,14 +4,49 @@ import numpy as np
 class Forward_Function:
     def __init__(
         self, vp=4000, ps_ratio=1/np.sqrt(3), Q=50, f=5.0,
-        tt_std_obs=None, 
-        tt_std_vel=None,
-        asl_std_Q = None,
-        baz_std=None, inc_std=None,
-        p_x_std=None, p_y_std=None,
+        tt_std_obs=0.01, 
+        tt_std_vel=0.1,
+        asl_std_Q = 10,
+        baz_std=6,
+        inc_std=20,
+        p_x_std=None,
+        p_y_std=None,
         correct_array_orientation=True,
-        array_baz_only=False
+        array_baz_only=True
         ):
+        '''
+        Forward function for an homogenous subsurface model defined by the parameters vp, ps_ratio, and Q.
+        
+        Parameters
+        ----------
+        vp : float, optional
+            The velocity of the P-waves in the subsurface. Units are m/s. The default is 4000.
+        ps_ratio : float, optional
+            The ratio between the P-wave and S-wave velocities. The default is 1/sqrt(3).
+        Q : float, optional
+            The quality factor of the subsurface. The default is 50.
+        f : float, optional
+            The frequency used for amplitude source location. The default is 5.0.
+        tt_std_obs : float, optional
+            The standard deviation of the observed travel times due to measurement errors. The default is 0.01.
+        tt_std_vel : float, optional
+            The standard deviation of the observed travel times due to uncertainties in the velocity model. Approximates the uncertainty accumulated over the ray path as a radnom walk, resulting in the following standard deviation contribution: sqrt(tt * tt_std_vel**2). The default is 0.1.
+        asl_std_Q : float, optional
+            The standard deviation of the uncertainties in the quality factor. Is propagated through the amplitude source location calculation. The default is 10.
+        baz_std : float, optional
+            The standard deviation of the uncertainties in the backazimuth. The default is 6 degrees.
+        inc_std : float, optional
+            The standard deviation of the uncertainties in the incidence angle. The default is 20 degrees.
+        p_x_std : float, optional
+            The standard deviation of the uncertainties in the x-component of the slowness vector. Can be used as an alternative to baz_std and inc_std. The default is None.
+        p_y_std : float, optional
+            The standard deviation of the uncertainties in the y-component of the slowness vector. Can be used as an alternative to baz_std and inc_std. The default is None.
+        correct_array_orientation : bool, optional
+            Correct the orientation of the array based on the local gradient of the surface. The default is True.
+        array_baz_only : bool, optional
+            Use only the backazimuth for the array design. Incidence angles are often hard to estimate. The default is True.        
+        '''
+        
         self.vp = vp
         
         self.Q = Q
@@ -52,7 +87,6 @@ class Forward_Function:
                 
                 design_coord_dict[d_i].append(loc)
                 
-                
         design_data = []
         for d_i in design_coord_dict:
             design_coord_dict[d_i] = np.vstack(design_coord_dict[d_i])
@@ -84,36 +118,8 @@ class Forward_Function:
         p_tt = ray_dist / self.vp
                 
         return p_tt, self.tt_std_obs**2 + p_tt * self.tt_std_vel**2
-    
-    # def _s_tt(self, design, model_samples):
-    #     ray_dist = self._raydist(design, model_samples)
-    #     s_tt = ray_dist / (self.vp * self.ps_ratio)
-    #     return s_tt, self.s_std_obs**2 + s_tt * self.std_vel**2
-        
-    # def _ps_diff(self, design, model_samples):
-    #     ray_dist = self._raydist(design, model_samples)
-    #     p_tt = ray_dist / self.vp
-    #     s_tt = p_tt / self.ps_ratio
-        
-    #     vel_cov = (s_tt - p_tt) * self.std_vel**2
 
-    #     return s_tt - p_tt, self.p_std_obs**2 + self.s_std_obs**2 + vel_cov
-            
-    def _asl(self, design, model_samples):
-        # ray_dist = self._raydist(design, model_samples)
-        # s_tt = ray_dist / (self.vp * self.ps_ratio) 
-        
-        # ray_dist_term = (1/ray_dist)
-        # exp_term = np.exp(-(self.C * s_tt))    
-        # cov_C = self.C * (self.asl_std_Q / self.Q)**2
-        
-        # asl_data = ray_dist_term * exp_term
-        
-        # cov_exp = exp_term**2 * ( s_tt * cov_C)**2        
-        # asl_cov =  ray_dist_term * cov_exp
-        
-        # return np.log(asl_data), (np.sqrt(asl_cov)/asl_data)**2
-        
+    def _asl(self, design, model_samples):        
         ray_dist = self._raydist(design, model_samples)
         s_tt = ray_dist / (self.vp * self.ps_ratio)
         
@@ -149,32 +155,27 @@ class Forward_Function:
         asl_data_log_cov = (np.sqrt(asl_data_cov)/asl_data)**2
                 
         return asl_data_log, asl_data_log_cov
-        
-
-
-
-    
     
     def _array(self, design, model_samples):
     
         model_samples = model_samples[..., None, :, :]
         coords        = design[..., None, :3]
         
-        conection = coords - model_samples
+        connection = coords - model_samples
 
         if (self.array_correct_orientation):
             if (np.any(np.isnan(design[..., 3:]))):
                 raise ValueError('Normal vector is missing')
             else:
-                rotations = [rotation(
+                _rotations = [_rotation(
                     np.array([0, 0, 1]), d[3:]) for d in design]
-                # both r and conection are normalized
-                for i, r in enumerate(rotations):
-                    conection[i] = np.dot(r, conection[i].T).T
+                # both r and connection are normalized
+                for i, r in enumerate(_rotations):
+                    connection[i] = np.dot(r, connection[i].T).T
     
         baz = np.rad2deg(np.arctan2(
-            conection[..., 1],
-            conection[..., 0]))
+            connection[..., 1],
+            connection[..., 0]))
         
         if self.array_baz_only:
             slowness = np.zeros((2, *baz.shape))
@@ -189,8 +190,8 @@ class Forward_Function:
                 
         else:
             incidence = 90 - np.rad2deg(np.arcsin(
-                conection[..., 2] / 
-                np.linalg.norm(conection, 2, axis=-1)))
+                connection[..., 2] / 
+                np.linalg.norm(connection, 2, axis=-1)))
             
             slowness = np.zeros((2, *baz.shape))
             slowness[0] = np.cos(np.radians(baz))
@@ -214,7 +215,7 @@ class Forward_Function:
 
         return slowness, cov
 
-def rotation(v1, v2):
+def _rotation(v1, v2):
     """
     Compute a matrix R that rotates v1 to align with v2.
     v1 and v2 must be length-3 1d numpy arrays.

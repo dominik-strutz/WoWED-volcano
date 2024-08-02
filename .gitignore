@@ -5,6 +5,8 @@
 /legacy
 /figures
 /local_tests
+/data
+/.vscode
 
 **/.pytest_cache
 **/__pycache__
@@ -13,3 +15,8 @@
 **/*.tif
 # except for the following files
 !data/topo_cache/SRTM15Plus_37.56834_37.92766_14.77178_15.22622.tif
+het_vel_notebook_plot.ipynb
+!data/GVP_Volcano_List.csv
+
+
+.filedump

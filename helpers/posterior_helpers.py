@@ -22,7 +22,8 @@ def calculate_posterior(design, true_event, prior_data, forward_function, downsa
         prior_data.Z.values,
         indexing='ij'
     )
-    src_loc_grid = np.stack(source_locations, axis=-1).reshape(-1, 3)
+    src_mask = prior_data.values > 0
+    src_loc_grid = np.stack(source_locations, axis=-1).reshape(-1, 3)[src_mask.ravel()]
 
     tt, cov = forward_function(design, src_loc_grid)
     
@@ -32,17 +33,16 @@ def calculate_posterior(design, true_event, prior_data, forward_function, downsa
             torch.tensor(np.sqrt(cov), dtype=torch.float32)
         ), 1)
         
-    log_data_likelihood = data_likelihood.log_prob(
+    log_data_likelihood = np.nan * np.ones(prior_data.values.shape)
+    
+    log_data_likelihood[src_mask] = data_likelihood.log_prob(
         torch.tensor(tt_obs, dtype=torch.float32)
     ).numpy()
-    log_data_likelihood = log_data_likelihood.reshape(prior_data.values.shape)
-    log_data_likelihood = np.where(log_data_likelihood < -2e1, np.nan, log_data_likelihood)
-    
-    prior = np.where(prior_data.values == 0, np.nan, prior_data.values)
-    log_prior = np.log(prior)
+    log_prior = np.nan * np.ones(prior_data.values.shape)
+    log_prior[src_mask] = np.log(prior_data.values[src_mask])
 
-    log_evidence = np.nanmean(log_data_likelihood + log_prior)    
-    log_posterior = log_data_likelihood + log_prior - log_evidence    
+    log_evidence = np.nanmean(log_data_likelihood + log_prior)
+    log_posterior = log_data_likelihood + log_prior - log_evidence
     log_posterior = np.nan_to_num(log_posterior, nan=-np.inf)
         
     return xr.DataArray(
