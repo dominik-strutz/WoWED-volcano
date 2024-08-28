@@ -1,7 +1,5 @@
 import numpy as np
 import xarray as xr
-import torch
-from torch.distributions import Normal, Independent
 
 def calculate_posterior(design, true_event, prior_data, forward_function, downsample_size=128):
     
@@ -25,19 +23,11 @@ def calculate_posterior(design, true_event, prior_data, forward_function, downsa
     src_mask = prior_data.values > 0
     src_loc_grid = np.stack(source_locations, axis=-1).reshape(-1, 3)[src_mask.ravel()]
 
-    tt, cov = forward_function(design, src_loc_grid)
+    tt, cov = forward_function(design, src_loc_grid)    
+    log_data_likelihood = np.nan * np.ones(prior_data.values.shape)    
+    log_data_likelihood[src_mask] = -0.5 * np.sum(np.log(2 * np.pi * cov) + (tt - tt_obs)**2 / cov, axis=-1)
     
-    data_likelihood = Independent(
-        Normal(
-            torch.tensor(tt, dtype=torch.float32),
-            torch.tensor(np.sqrt(cov), dtype=torch.float32)
-        ), 1)
-        
-    log_data_likelihood = np.nan * np.ones(prior_data.values.shape)
     
-    log_data_likelihood[src_mask] = data_likelihood.log_prob(
-        torch.tensor(tt_obs, dtype=torch.float32)
-    ).numpy()
     log_prior = np.nan * np.ones(prior_data.values.shape)
     log_prior[src_mask] = np.log(prior_data.values[src_mask])
 

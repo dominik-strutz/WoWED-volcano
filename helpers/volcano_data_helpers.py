@@ -152,6 +152,8 @@ def fetch_topography_data(
         west = center_latlon[1] - bounding_box['extent_west'] / np.cos(np.radians(center_latlon[0])) / 111.32
         east = center_latlon[1] + bounding_box['extent_east'] / np.cos(np.radians(center_latlon[0])) / 111.32        
 
+    print(f'Fetching topography data for {demtype} between {south:.5f} and {north:.5f} latitude and {west:.5f} and {east:.5f} longitude')
+
     cache_filename = f'data/topo_cache/{demtype}_{south:.5f}_{north:.5f}_{west:.5f}_{east:.5f}.tif'
         
     if os.path.exists(cache_filename):

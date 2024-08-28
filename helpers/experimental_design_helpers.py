@@ -1,12 +1,10 @@
 import numpy as np
 from tqdm.auto import tqdm
-import pygad
 from matplotlib import pyplot as plt
 
 import math
-import torch
-from torch.distributions import Normal, Independent
 from sklearn.utils.extmath import fast_logdet
+from scipy.special import logsumexp
 
 def add_gradient(surface_data):
     '''
@@ -73,26 +71,28 @@ class NMC_method:
 
     def __call__(self, design):
 
-        torch.manual_seed(0)
+        np.random.seed(0)
         tt, cov = self.forward_function(design, self.model_samples)
 
-        tt = torch.tensor(tt, dtype=torch.float32)
-        cov = torch.tensor(cov, dtype=torch.float32)
-
         N, M = tt.shape[0], tt.shape[0]
-        # M = int(math.sqrt(N))
                 
-        N_data_likelihoods = Independent(Normal(tt, cov ** (1/2)), 1)
-        M_data_likelihoods = N_data_likelihoods.expand((M, N))
+        tt_noise = tt + np.random.normal(0, 1, tt.shape) * np.sqrt(cov)
+        likelihood_term = -0.5 * np.sum(np.log(2 * np.pi * cov) + (tt_noise - tt)**2 / cov, axis=-1)
         
-        N_data_samples = N_data_likelihoods.sample()
-        M_data_samples = N_data_samples
-
-        evidence_term = M_data_likelihoods.log_prob(
-                        M_data_samples.unsqueeze(0).swapaxes(0, 1)
-                        ).swapaxes(0, 1).logsumexp(0) - math.log(M)
+        # evidence_term = -0.5 * np.sum(np.log(2 * np.pi * cov) + (
+        #     tt_noise.reshape((N, 1, -1)) - tt.reshape(1, N, -1))**2 / cov, axis=-1)
         
-        likelihood_term = N_data_likelihoods.log_prob(N_data_samples)
+        # evidence_term = logsumexp(evidence_term, axis=1) - np.log(M)
+        log_scale = np.log(np.sqrt(cov.reshape(N, 1, -1)))   
+        evidence_term = logsumexp(np.sum(
+                -((tt_noise.reshape(N, 1, -1) - tt.reshape(1, N, -1)) ** 2) / (2 * cov.reshape(N, 1, -1))
+                - log_scale
+                - np.log(np.sqrt(2 * np.pi)), axis=-1),
+                axis=-1,
+            ) - np.log(M)
+            
+        print(likelihood_term.sum(0) / N)
+        print(evidence_term.sum(0) / N)
 
         eig = (likelihood_term - evidence_term).sum(0) / N
 
@@ -102,6 +102,7 @@ class NMC_method:
     def _construct_model_samples(prior_data, n_model_samples):
         
         return get_prior_samples(prior_data, n_model_samples)
+
 
 
 class DN_method:
@@ -115,17 +116,13 @@ class DN_method:
 
     def __call__(self, design):
 
-        torch.manual_seed(0)
+        np.random.seed(0)
         tt, cov = self.forward_function(design, self.model_samples)
         
-        tt = torch.tensor(tt, dtype=torch.float32)
-        cov = torch.tensor(cov, dtype=torch.float32)
-                
-        N_data_likelihoods = Independent(Normal(tt, cov ** (1/2)), 1)
-        tt_noise = N_data_likelihoods.sample()
-        likelihood_term = N_data_likelihoods.log_prob(tt_noise)
+        tt_noise = tt + np.random.normal(0, 1, tt.shape) * np.sqrt(cov)
+        likelihood_term = -0.5 * np.sum(np.log(2 * np.pi * cov) + (tt_noise - tt)**2 / cov, axis=-1)
         likelihood_term = likelihood_term.sum(0) / tt.shape[0]
-
+        
         if tt_noise.shape[-2] >= 2:
             evidence_covariance = np.cov(tt_noise.T)
         else:
@@ -249,61 +246,42 @@ class Design_Optimisation:
         elif isinstance(available_stations, tuple):
             for station in available_stations:
                 assert isinstance(station, tuple)
-                assert all(st in ['tt', 'asl', 'array'] for st in station)
+                # assert all(st in ['tt', 'asl', 'array'] for st in station)
+                #TODO: add check for data type
         else:
             raise ValueError("available_stations must be either a tuple or a dict")
 
-        if optimisation_algorithm == 'genetic':
-            best_design, info = self._genetic_optimisation(
-                available_stations,
-                optimisation_kwargs,
-            )
+        if optimisation_algorithm == 'differential_evolution':
+            best_design, info = self._differential_evolution_optimisation(
+                available_stations, optimisation_kwargs)
         elif optimisation_algorithm == 'sequential':
             raise NotImplementedError
         elif optimisation_algorithm == 'random':
             raise NotImplementedError
         else:
-            raise ValueError("optimisation_algorithm must be one of ['genetic', 'sequential', 'random']")
+            raise ValueError("optimisation_algorithm must be one of ['differential_evolution',]")
         
         return best_design, info
             
-    def _genetic_optimisation(
-        self,
-        available_stations,
-        optimisation_kwargs,
-    ):
+    def _differential_evolution_optimisation(
+        self, available_stations, optimisation_kwargs):
         
-        optimisation_kwargs.setdefault('num_generations', 100)
-        optimisation_kwargs.setdefault('num_parents_mating', 4)
-        optimisation_kwargs.setdefault('mutation_percent_genes', 'default')
-        optimisation_kwargs.setdefault('sol_per_pop', 64)
-        optimisation_kwargs.setdefault('gene_type', int)
-        optimisation_kwargs.setdefault('allow_duplicate_genes', False)
-        optimisation_kwargs.setdefault('mutation_type', 'random')
-        optimisation_kwargs.setdefault('suppress_warnings', True)
-        optimisation_kwargs.setdefault('random_seed', 1)
-        
-        optimisation_kwargs['num_genes'] = len(available_stations)
+        optimisation_kwargs.setdefault('maxiter', 100)
+        optimisation_kwargs.setdefault('popsize', 15)
+        optimisation_kwargs.setdefault('tol', 1e-3)
+        optimisation_kwargs.setdefault('seed', 0)
         
         plot_fitness = optimisation_kwargs.pop('plot_fitness', False)
         progress_bar = optimisation_kwargs.pop('progress_bar', True)
-                        
-        gene_space = []
-        for station in available_stations:
-            if 'array' in station:
-                gene_space.append(np.arange(len(self.design_points_dict['array']),  dtype=int).tolist())
-            else:
-                gene_space.append(np.arange(len(self.design_points_dict['node']),  dtype=int).tolist())
-
-        def fitness_function(ga_instance, solution, solution_idx):
-            
+    
+        def fitness_function(design, *args):            
             design_with_type = []
             for i, st in enumerate(available_stations):
-                if 'array' in st:
-                    st_coords = self.design_points_dict['array'][solution[i]]
+                if 'array' in st:                   
+                    st_coords = self.design_points_dict['array'][int(design[i])]
                     design_with_type += [(st, st_coords)]
                 else:
-                    st_coords = self.design_points_dict['node'][solution[i]]
+                    st_coords = self.design_points_dict['node'][int(design[i])]
                     design_with_type += [(st, st_coords)]
 
             if self.preexisting_design is not None:
@@ -311,60 +289,56 @@ class Design_Optimisation:
 
             eig = self.design_criterion(design_with_type)
             
-            return eig            
-            
+            return -eig
+        
+        from scipy.optimize import differential_evolution
+                
+        bounds = []
+        for st in available_stations:
+            if 'array' in st:
+                bounds.append((0, len(self.design_points_dict['array'])-1))
+            else:
+                bounds.append((0, len(self.design_points_dict['node'])-1))
+        
         with tqdm(
-            total=optimisation_kwargs['num_generations'],
+            total=optimisation_kwargs['maxiter'],
             desc='GA progress',
-            postfix={'DN criterion': 0.0},
+            postfix={'EIG: ': 0.0},
             disable=not progress_bar,
             ) as pbar:
-            
-            def on_generation(ga_instance):
-                pbar.update(1)
-                pbar.set_postfix(
-                    {'DN criterion': ga_instance.last_generation_fitness.max(),})
-                
-            ga_instance = pygad.GA(
-                fitness_func=fitness_function,
-                gene_space=gene_space,
-                on_generation=on_generation,
-                **optimisation_kwargs,
-            )
-            
-            ga_instance.run()
-            
-        
-        best_design_idx = ga_instance.best_solution()[0]
-        best_design_EIG = ga_instance.last_generation_fitness.max()
 
+            EIG_history = []
+        
+            def callback(xk, convergence):
+                pbar.set_postfix({'EIG: ': -fitness_function(xk)})
+                pbar.update(1)
+                EIG_history.append(-fitness_function(xk))
+        
+            result = differential_evolution(
+                fitness_function,
+                bounds=bounds,   
+                integrality = [True]*len(available_stations),
+                callback=callback,
+                **optimisation_kwargs
+            )
+        
         best_design = []
         for i, st in enumerate(available_stations):
             if 'array' in st:
-                best_design.append(
-                    (st, self.design_points_dict['array'][best_design_idx[i]]))
+                st_coords = self.design_points_dict['array'][int(result.x[i])]
+                best_design.append((st, st_coords))
             else:
-                best_design.append(
-                    (st, self.design_points_dict['node'][best_design_idx[i]]))
-
-        if self.preexisting_design is not None:
-            best_design = self.preexisting_design + best_design
-
+                st_coords = self.design_points_dict['node'][int(result.x[i])]
+                best_design.append((st, st_coords))
+                
         if plot_fitness:
-            fitness = np.array(ga_instance.best_solutions_fitness)
-            
-            fig, ax = plt.subplots(figsize=(6, 4), dpi=120)
-            ax.plot(fitness, color='black', linewidth=2)
-            ax.set_xlabel('Generation')
-            ax.set_ylabel('DN criterion')
-            
-            ax.set_title('Fitness over generations')
-            
+            fig, ax = plt.subplots()
+            ax.plot(EIG_history)
+            ax.set_xlabel('Iteration')
+            ax.set_ylabel('Fitness')
+            ax.set_title('Fitness over iterations')
             plt.show()
             
-        out_info = dict(
-            best_design_EIG=best_design_EIG,
-            ga_instance=ga_instance,
-        )
-                
-        return best_design, out_info
+        result.EIG_history = EIG_history
+            
+        return best_design, result

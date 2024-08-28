@@ -5,9 +5,9 @@ from matplotlib.colors import ListedColormap
 from skimage import measure
 from scipy.interpolate import interp1d
 
-import torch
 import bqplot.pyplot as bqp_plt
 from bqplot import ColorScale
+from ipyleaflet import Map, basemaps, basemap_to_tiles, GeomanDrawControl
 
 from helpers.volcano_data_helpers import get_elevation
 
@@ -25,6 +25,61 @@ red_cmap = ListedColormap(red_cmap)
 
 binary_cmap = ListedColormap(
     [(0.6, 0, 0, 1), (0, 0, 0, 0)])
+
+def draw_bounding_box(volcano_data):
+
+    center = (volcano_data['lat'], volcano_data['lon'])
+    m = Map(center=center, zoom=10)
+
+    draw_control = GeomanDrawControl()
+    draw_control.rectangle = {
+        "shapeOptions": {
+            "color": "black",
+            "fillOpacity": 0.0
+        }
+    }
+
+    draw_control.polyline = {}
+    draw_control.polygon = {}
+    draw_control.circlemarker = {}
+
+    draw_control.edit   = False
+    draw_control.cut    = False
+    draw_control.rotate = False
+
+    # add first rectangle
+
+    m.add(draw_control)
+
+    bounding_box = dict(
+        extent_south = 20.0, # in km
+        extent_north = 20.0, # in km
+        extent_west  = 20.0, # in km
+        extent_east  = 20.0, # in km
+    )
+
+
+    def handle_draw(self, action, geo_json):
+        """Do something with the GeoJSON when it's drawn on the map"""
+        
+        print(geo_json[0]['geometry']['coordinates'])
+        
+        try:
+            del bounding_box['extent_south']
+            del bounding_box['extent_north']
+            del bounding_box['extent_west']
+            del bounding_box['extent_east']
+        except KeyError:
+            pass
+        
+        bounding_box['min_lat'] = np.array(geo_json[0]['geometry']['coordinates'])[:, :, 1].min(axis=-1).item()
+        bounding_box['max_lat'] = np.array(geo_json[0]['geometry']['coordinates'])[:, :, 1].max(axis=-1).item()
+        bounding_box['min_lon'] = np.array(geo_json[0]['geometry']['coordinates'])[:, :, 0].min(axis=-1).item()
+        bounding_box['max_lon'] = np.array(geo_json[0]['geometry']['coordinates'])[:, :, 0].max(axis=-1).item()
+
+    draw_control.on_draw(handle_draw)
+        
+    return m, bounding_box
 
 def plot_topography(ax, topo_array):
     '''
@@ -415,8 +470,9 @@ def plot_posterior_model(
 def plot_design_space_dict(
     design_space_dict, SURFACE_DATA, VOLCANO_DATA, show=True):
     
-    # fig, ax_list = plt.subplots(2, 1, figsize=(4, 8), sharex=True, sharey=True)
-    fig, ax_list = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
+    fig, ax_list = plt.subplots(1, len(design_space_dict.items()), figsize=(8, 4), sharex=True, sharey=True)
+    if len(design_space_dict.items()) == 1:
+        ax_list = [ax_list]
 
     for ax, (ds_name, ds) in zip(ax_list, design_space_dict.items()):
 
@@ -463,8 +519,6 @@ def plot_design(
     unique_types = []
 
     if ('color' not in kwargs):
-        
-        print('No color specified, using black')
         kwargs['color'] = 'k'
         
     for sta_type, sta_data in design:
@@ -480,7 +534,8 @@ def plot_design(
             if data_type not in unique_types:
                 unique_types.append(data_type)
     
-    if 'tt' in sta_type or 'asl' in unique_types:
+    # if any of the types is not array, add a legend entry
+    if ['array' == ut for ut in unique_types].count(True) != len(unique_types):
         ax.scatter(
             [], [], label='broadband', c='k',
             s=120,
@@ -594,8 +649,9 @@ def interactive_design_plot_plain(
             if data_type not in unique_types:
                 unique_types.append(data_type)
         scat_list.append(scat)
-        
-    if 'tt' in unique_types or 'asl' in sta_type:
+
+    # if any of the types is not array, add a legend entry
+    if ['array' == ut for ut in unique_types].count(True) != len(unique_types):
         bqp_plt.plot(
             [sta_data[0]*1e-3, sta_data[0]*1e-3],
             [sta_data[1]*1e-3, sta_data[1]*1e-3],
@@ -680,7 +736,6 @@ def interactive_design_plot_plain(
         in_ds = design_space_dict[sta_typ].sel(E=new_location[0], N=new_location[1], method='nearest').values
         
         changing_design[index][1] = new_location
-        torch.manual_seed(0)
         eig = eig_criterion(changing_design)
         
         post_information = eig + prior_information
@@ -824,7 +879,8 @@ def interactive_design_plot_posterior(
     )
     scat_list.append(src_scat)
     
-    if 'tt' in unique_types or 'asl' in sta_type:
+    # if any of the types is not array, add a legend entry
+    if ['array' == ut for ut in unique_types].count(True) != len(unique_types):
         bqp_plt.plot(
             [sta_data[0]*1e-3, sta_data[0]*1e-3],
             [sta_data[1]*1e-3, sta_data[1]*1e-3],
@@ -921,14 +977,13 @@ def interactive_design_plot_posterior(
                 in_ds = design_space_dict['array'].sel(E=sta_data[0], N=sta_data[1], method='nearest').values
                 if not in_ds:
                     break
-                
-            if 'tt' in sta_type or 'asl' in sta_type:
+            # if its not an array, it must be a node
+            else:
                 in_ds = design_space_dict['node'].sel(E=sta_data[0], N=sta_data[1], method='nearest').values
                 
                 if not in_ds:
                     break
                                                 
-        torch.manual_seed(0)
         eig = eig_criterion(changing_design)
         
         post_information = eig + prior_information
@@ -960,8 +1015,11 @@ def interactive_design_plot_posterior(
             for j, c in enumerate(post_contour):
                 # posterior_plots[i*j].x = c[:,0]
                 # posterior_plots[i*j].y = c[:,1]
-                posterior_plots[j*len(levels) + i].x = c[:,0]
-                posterior_plots[j*len(levels) + i].y = c[:,1]
+                try:
+                    posterior_plots[j*len(levels) + i].x = c[:,0]
+                    posterior_plots[j*len(levels) + i].y = c[:,1]
+                except IndexError:
+                    pass
                 
         label.text = ['Design Statistics:',
                     f'EIG: {eig:.3f} nats',
@@ -983,14 +1041,13 @@ def interactive_design_plot_posterior(
                 in_ds = design_space_dict['array'].sel(E=sta_data[0], N=sta_data[1], method='nearest').values
                 if not in_ds:
                     break
-                
-            if 'tt' in sta_type or 'asl' in sta_type:
+            # if its not an array, it must be a node
+            else:                
                 in_ds = design_space_dict['node'].sel(E=sta_data[0], N=sta_data[1], method='nearest').values
                 
                 if not in_ds:
                     break    
     
-        torch.manual_seed(0)
         eig = eig_criterion(changing_design)
         
         post_information = eig + prior_information
@@ -1018,8 +1075,12 @@ def interactive_design_plot_posterior(
                 contour[:,1] = fx_post(contour[:,1])
 
             for j, c in enumerate(post_contour):
-                posterior_plots[j*len(levels) + i].x = c[:,0]
-                posterior_plots[j*len(levels) + i].y = c[:,1]
+                
+                try:
+                    posterior_plots[j*len(levels) + i].x = c[:,0]
+                    posterior_plots[j*len(levels) + i].y = c[:,1]
+                except IndexError:
+                    pass
                 
         label.text = ['Design Statistics:',
                     f'EIG: {eig:.3f} nats',
