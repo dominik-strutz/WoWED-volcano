@@ -14,7 +14,7 @@
 
 **/*.tif
 # except for the following files
-!data/topo_cache/SRTM15Plus_37.56834_37.92766_14.77178_15.22622.tif
+!data/topo_cache/SRTM15Plus_37.56751_37.92804_14.77253_15.22657.tif
 !data/GVP_Volcano_List.csv
 
 
