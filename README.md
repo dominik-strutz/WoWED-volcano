@@ -14,7 +14,7 @@ The easiest way of getting started is through our colab notebooks:
 
 | Example | Link |
 | --- | --- |
-| basic interactive notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/main_design_notebook.ipynb)    |
+| basic interactive notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/example_design_process.ipynb)    |
 
 
 ## Local Installation
