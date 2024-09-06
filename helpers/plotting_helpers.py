@@ -598,7 +598,7 @@ def plot_posterior_model(
             alpha=1,
             facecolors="none",
             edgecolors="k",
-            label="(approx) std",
+            label="2x approx. standard deviation",
         )
 
     for sta_type, sta_data in design:
@@ -618,7 +618,7 @@ def plot_posterior_model(
     if N_lim is not None:
         ax_dict["prior_marginal_Z"].set_ylim(N_lim)
 
-    ax_dict["prior_slice_E"].scatter(
+    ax_dict["prior_marginal_Z"].scatter(
         [], [], s=50, marker="*", c="black", linewidth=0, alpha=1.0, label="true event"
     )
 
