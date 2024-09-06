@@ -1,5 +1,5 @@
-# run: conda env create --file environment.yml
-name: wowved_24_06
+# run: conda env create --file wowved_volcano.yml
+name: wowved_volcano
 channels:
   - conda-forge
 dependencies:
@@ -14,21 +14,11 @@ dependencies:
 - pandas
 - xarray
 
-# ML libraries
-- cpuonly
-- pytorch-cpu
-
 # plotting
 - matplotlib
 
-# parallel processing
-# - dill
-# - mpire
-# - joblib
-
 # general scientific libraries
 - scipy
-- shapely
 - scikit-learn
 - scikit-image
 - pygad
@@ -37,3 +27,6 @@ dependencies:
   - utm
   - ipympl
   - bqplot
+  - ipywidgets
+  - ipyleaflet
+  
