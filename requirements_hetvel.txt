@@ -17,4 +17,5 @@ ipympl
 bqplot
 ipywidgets
 ipyleaflet
-pykonal
+ttcrpy
+vtk
