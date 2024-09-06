@@ -7,7 +7,7 @@ from scipy.interpolate import interp1d
 
 import bqplot.pyplot as bqp_plt
 from bqplot import ColorScale
-from ipyleaflet import Map, GeomanDrawControl, basemaps, Rectangle
+from ipyleaflet import Map, basemaps, Rectangle
 from ipywidgets import Layout
 
 import utm
@@ -136,7 +136,18 @@ def draw_bounding_box(
 
     m.fit_bounds(bound_rect)
 
-    draw_control = GeomanDrawControl()
+    m.add_layer(Rectangle(bounds=bound_rect.tolist(), color="black", fill_opacity=0.0))
+
+    try:
+        # try to use the geoman draw control, if not available use the deprecated draw control
+        from ipyleaflet import GeomanDrawControl
+        draw_control = GeomanDrawControl()
+        draw_control_type = 'geoman'
+    except ImportError:
+        from ipyleaflet import DrawControl
+        draw_control = DrawControl()
+        draw_control_type = 'deprecated'
+        
     draw_control.rectangle = {"shapeOptions": {"color": "black", "fillOpacity": 0.0}}
     draw_control.polyline = {}
     draw_control.polygon = {}
@@ -148,32 +159,28 @@ def draw_bounding_box(
     draw_control.rotate = False
 
     m.add(draw_control)
-
-    m.add_layer(Rectangle(bounds=bound_rect.tolist(), color="black", fill_opacity=0.0))
-
+        
     def handle_draw(self, action, geo_json):
         """Do something with the GeoJSON when it's drawn on the map"""
 
-        bounding_box["min_lat"] = (
-            np.array(geo_json[0]["geometry"]["coordinates"])[:, :, 1]
-            .min(axis=-1)
-            .item()
-        )
-        bounding_box["max_lat"] = (
-            np.array(geo_json[0]["geometry"]["coordinates"])[:, :, 1]
-            .max(axis=-1)
-            .item()
-        )
-        bounding_box["min_lon"] = (
-            np.array(geo_json[0]["geometry"]["coordinates"])[:, :, 0]
-            .min(axis=-1)
-            .item()
-        )
-        bounding_box["max_lon"] = (
-            np.array(geo_json[0]["geometry"]["coordinates"])[:, :, 0]
-            .max(axis=-1)
-            .item()
-        )
+        if draw_control_type == 'deprecated':
+            coordinates = geo_json["geometry"]["coordinates"][-1]
+        else:
+            coordinates = geo_json[-1]["geometry"]["coordinates"][0]
+        
+        bounding_box["min_lat"] = min([coord[1] for coord in coordinates])
+        bounding_box["max_lat"] = max([coord[1] for coord in coordinates])
+        bounding_box["min_lon"] = min([coord[0] for coord in coordinates])
+        bounding_box["max_lon"] = max([coord[0] for coord in coordinates])
+    
+        #remove original rectangle layers but the map
+        m.layers = m.layers[:1]
+        
+        draw_control.clear()
+        m.add_layer(
+            Rectangle(bounds=[[bounding_box["min_lat"], bounding_box["min_lon"]], [bounding_box["max_lat"], bounding_box["max_lon"]]], color="black", fill_opacity=0.0))
+        
+            
 
     draw_control.on_draw(handle_draw)
 
