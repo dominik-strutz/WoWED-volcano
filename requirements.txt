@@ -1,6 +1,5 @@
 # This file lists all the Python packages that are required by the project
 # Run `pip install -r requirements.txt` to install all required packages
-# Run `pip freeze > requirements.txt[hetvel]` to install all required packages plus the ones necessary for calculating travel times in a heterogeneous medium
 tqdm
 jupyter
 jupyterlab

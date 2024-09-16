@@ -157,6 +157,7 @@ def draw_bounding_box(
     draw_control.drag = False
     draw_control.cut = False
     draw_control.rotate = False
+    draw_control.remove = False
 
     m.add(draw_control)
         
@@ -841,6 +842,33 @@ def plot_design(ax, design, **kwargs):
 
     return ax
 
+def plot_design_statistics(ax, best_design, nmc_method, prior_information):
+    eig = nmc_method(best_design)
+    post_information = eig + prior_information
+
+    k = 3
+    std = np.exp((-post_information - k/2 * (1 + np.log(2*np.pi))) / (0.5 * k * 2))
+
+    t = ax.text(
+        x=1.1, y=0.95,
+        s=rf'''Design Statistics:
+        
+    EIG:        {eig:.1f} nats
+    Approx std: {std:.0f} m
+    $_\mathrm{{std = standard \, deviation}}$ ''',
+        horizontalalignment='left',
+        verticalalignment='top',
+        transform=ax.transAxes,
+        fontsize=8,
+        fontfamily='monospace',
+    )
+    t.set_bbox(dict(facecolor='white', alpha=1.0, edgecolor='black'))
+
+    ax.set_xlabel("Easting [km]")
+    ax.set_ylabel("Northing [km]")
+    
+    return eig, std
+
 
 def interactive_design_plot(**kwargs):
     """
@@ -939,7 +967,7 @@ def _interactive_design_plot_plain(
     unique_types = []
     for i, (sta_type, sta_data) in enumerate(changing_design):
         scat = bqp_plt.scatter(
-            [sta_data[0] * 1e-3],
+            [sta_data[0] * 1e-3],   
             [sta_data[1] * 1e-3],
             default_size=300 if "array" in sta_type else 150,
             marker="crosshair" if "array" in sta_type else "triangle-up",

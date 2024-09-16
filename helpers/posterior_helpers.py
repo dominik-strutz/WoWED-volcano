@@ -55,8 +55,7 @@ def calculate_posterior(
         name="log_posterior",
     )
 
-
-def get_posterior_statisics(posterior_data):
+def get_posterior_statistics(posterior_data):
     posterior_mode = np.unravel_index(
         np.argmax(posterior_data.values), posterior_data.shape
     )
@@ -96,4 +95,13 @@ def get_posterior_statisics(posterior_data):
         )
     )
 
-    return dict(mode=posterior_mode, mean=posterior_mean, std=posterior_std)
+    return posterior_mode, posterior_mean, posterior_std
+
+def display_posterior_statistics(posterior_mode, posterior_mean, posterior_std):
+    return '''
+Posterior Mode:          Posterior Mean:          Posterior Std:
+    E: {0[0]:10.2f} m \t\t E: {1[0]:10.2f} m \t\t E: {2[0]:10.2f} m 
+    N: {0[1]:10.2f} m \t\t N: {1[1]:10.2f} m \t\t N: {2[1]:10.2f} m
+    Z: {0[2]:10.2f} m \t\t Z: {1[2]:10.2f} m \t\t Z: {2[2]:10.2f} m
+    '''.format(posterior_mode, posterior_mean, posterior_std)
+

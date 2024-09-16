@@ -330,9 +330,9 @@ class Design_Optimisation:
             available_stations += [
                 ("arrival_p", "amplitude_s", "array"),
             ] * N_array
-        elif isinstance(available_stations, tuple):
+        elif isinstance(available_stations, tuple) or isinstance(available_stations, list):
             for station in available_stations:
-                assert isinstance(station, tuple)
+                assert isinstance(station, tuple) or isinstance(station, list)
                 for dtype in station:
                     assert (
                         dtype[:7] == "arrival"
@@ -340,7 +340,7 @@ class Design_Optimisation:
                         or dtype[:5] == "array"
                     )
         else:
-            raise ValueError("available_stations must be either a tuple or a dict")
+            raise ValueError("available_stations must be either a tuple/list or a dict")
 
         if optimisation_algorithm == "differential_evolution":
             best_design, info = self._differential_evolution_optimisation(

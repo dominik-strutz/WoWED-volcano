@@ -32,4 +32,5 @@ dependencies:
   - bqplot
   - ipywidgets
   - ipyleaflet
+  - pykonal
   

@@ -7,11 +7,25 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+import ipywidgets as widgets
 from PIL import Image
 from io import BytesIO
 
 import utm
 
+def choose_volcano(default_volcano='Etna'):
+    
+    volcano_data = pd.read_csv("data/GVP_Volcano_List.csv", header=1)
+    select_volcano = widgets.Combobox(
+            value=default_volcano,
+            placeholder='Choose Someone',
+            options=volcano_data['Volcano Name'].values.tolist(),
+            description='Choose volcano:',
+            ensure_option=True,
+            disabled=False
+        )
+    
+    return select_volcano
 
 def get_volcano_data(volcano_name):
     """
@@ -52,7 +66,7 @@ def get_volcano_data(volcano_name):
         ].to_dict("records")[0]
     except IndexError:
         raise ValueError(
-            f"Volcanoe {volcano_name} not found. Check the https://volcano.si.edu/ database for the correct name."
+            f"Volcanoe {volcano_name} not found. Check the https://volcano.si.edu/volcanolist_holocene.cfm database for the correct name."
         )
 
     volcanoe_data["lat"], volcanoe_data["lon"] = (
