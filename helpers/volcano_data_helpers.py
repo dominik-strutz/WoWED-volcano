@@ -289,7 +289,7 @@ def construct_highly_opinionated_prior(
         The discretised prior distribution. The data is normalized to sum to 1.
     """
 
-    z_max = surface_data["topography"].max()
+    z_max = surface_data["topography"].values.max()
     z_min = -depth_max * 1e3  # add some extra space below the surface
     z = np.linspace(z_min, z_max, cells_Z, dtype=np.float32)
 
