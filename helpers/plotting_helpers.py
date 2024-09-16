@@ -207,8 +207,8 @@ def plot_topography(ax, topo_array):
         The axis with the topography data plotted on it.
     """
 
-    E_min, E_max = topo_array.E.min(), topo_array.E.max()
-    N_min, N_max = topo_array.N.min(), topo_array.N.max()
+    E_min, E_max = topo_array.E.values.min(), topo_array.E.values.max()
+    N_min, N_max = topo_array.N.values.min(), topo_array.N.values.max()
 
     ax.imshow(
         topo_array.values.T,
@@ -224,8 +224,8 @@ def plot_topography(ax, topo_array):
     )
 
     ax.pc = ax.contour(
-        topo_array.E * 1e-3,
-        topo_array.N * 1e-3,
+        topo_array.E.values * 1e-3,
+        topo_array.N.values * 1e-3,
         topo_array.values.T,
         colors="k",
         zorder=-10,
@@ -944,12 +944,12 @@ def _interactive_design_plot_plain(
         y=surface_data["N"] * 1e-3,
         scales={
             "x": bqp_plt.LinearScale(
-                min=surface_data["E"].values.min() * 1e-3,
-                max=surface_data["E"].values.max() * 1e-3,
+                min=float(surface_data["E"].values.min()) * 1e-3,
+                max=float(surface_data["E"].values.max()) * 1e-3,
             ),
             "y": bqp_plt.LinearScale(
-                min=surface_data["N"].values.min() * 1e-3,
-                max=surface_data["N"].values.max() * 1e-3,
+                min=float(surface_data["N"].values.min()) * 1e-3,
+                max=float(surface_data["N"].values.max()) * 1e-3,
             ),
             "color": ColorScale(scheme="Greys"),
         },
@@ -975,7 +975,7 @@ def _interactive_design_plot_plain(
             stroke_width=5 if "array" in sta_type else 0,
             enable_move=True,
             display_legend=False,
-            names=i,
+            names=[i],
             display_names=False,
         )
         for data_type in sta_type:
@@ -999,7 +999,8 @@ def _interactive_design_plot_plain(
 
         for c in ds_nodes_cs:
             bqp_plt.plot(
-                c[:, 0], c[:, 1], colors=["purple"], stroke_width=1, opacity=0.5
+                c[:, 0], c[:, 1], colors=["#FFC300"],
+                stroke_width=1, opacity=0.8, line_style="solid"
             )
 
     if "array" in unique_types:
@@ -1019,7 +1020,9 @@ def _interactive_design_plot_plain(
             contour[:, 1] = fy(contour[:, 1])
 
         for c in ds_array_cs:
-            bqp_plt.plot(c[:, 0], c[:, 1], colors=["red"], stroke_width=1, opacity=0.5)
+            bqp_plt.plot(
+                c[:, 0], c[:, 1], colors=["#009933"],
+                stroke_width=1, opacity=0.8, line_style="solid")
 
     eig = eig_criterion(changing_design)
     post_information = eig + prior_information
@@ -1126,9 +1129,9 @@ def _interactive_design_plot_posterior(
     # slider for z position of source
     z_slider = widgets.FloatSlider(
         value=z_initial,
-        min=prior_data.Z.min(),
-        max=prior_data.Z.max(),
-        step=(prior_data.Z.max() - prior_data.Z.min()) / prior_data.Z.shape[0],
+        min=prior_data.Z.values.min(),
+        max=prior_data.Z.values.max(),
+        step=(prior_data.Z.values.max() - prior_data.Z.min()) / prior_data.Z.values.shape[0],
         description="Z [m]",
         continuous_update=False,
     )
@@ -1180,12 +1183,12 @@ def _interactive_design_plot_posterior(
         y=surface_data["N"] * 1e-3,
         scales={
             "x": bqp_plt.LinearScale(
-                min=surface_data["E"].values.min() * 1e-3,
-                max=surface_data["E"].values.max() * 1e-3,
+                min=float(surface_data["E"].values.min()) * 1e-3,
+                max=float(surface_data["E"].values.max()) * 1e-3,
             ),
             "y": bqp_plt.LinearScale(
-                min=surface_data["N"].values.min() * 1e-3,
-                max=surface_data["N"].values.max() * 1e-3,
+                min=float(surface_data["N"].values.min()) * 1e-3,
+                max=float(surface_data["N"].values.max()) * 1e-3,
             ),
             "color": ColorScale(scheme="Greys"),
         },
@@ -1242,7 +1245,7 @@ def _interactive_design_plot_posterior(
             stroke_width=5 if "array" in sta_type else 0,
             enable_move=True,
             display_legend=False,
-            names=i,
+            names=[i],
             display_names=False,
         )
         for data_type in sta_type:
@@ -1279,7 +1282,8 @@ def _interactive_design_plot_posterior(
             contour[:, 1] = fy(contour[:, 1])
 
         for c in ds_nodes_cs:
-            bqp_plt.plot(c[:, 0], c[:, 1], colors=["gray"], stroke_width=1, opacity=0.5)
+            bqp_plt.plot(c[:, 0], c[:, 1], colors=["#FFC300"],
+                         stroke_width=1, opacity=0.8, line_style="solid")
 
     if "array" in unique_types:
         bqp_plt.scatter(
@@ -1298,7 +1302,9 @@ def _interactive_design_plot_posterior(
             contour[:, 1] = fy(contour[:, 1])
 
         for c in ds_array_cs:
-            bqp_plt.plot(c[:, 0], c[:, 1], colors=["gray"], stroke_width=1, opacity=0.5)
+            bqp_plt.plot(
+                c[:, 0], c[:, 1], colors=["#009933"],
+                stroke_width=1, opacity=0.8, line_style="solid")
 
     eig = eig_criterion(changing_design)
     post_information = eig + prior_information

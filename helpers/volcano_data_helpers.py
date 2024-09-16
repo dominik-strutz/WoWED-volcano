@@ -246,14 +246,14 @@ def fetch_topography_data(
 
     surface_data = surface_data.interp(
         E=np.linspace(
-            surface_data.E.min(), surface_data.E.max(), cells_E, dtype=np.float32
+            surface_data.E.values.min(), surface_data.E.values.max(), cells_E, dtype=np.float32
         ),
         N=np.linspace(
-            surface_data.N.min(), surface_data.N.max(), cells_N, dtype=np.float32
+            surface_data.N.values.min(), surface_data.N.values.max(), cells_N, dtype=np.float32
         ),
-        method="linear",
+        method="linear", kwargs={"fill_value": 'extrapolate', "bounds_error": False}
     )
-
+    
     return surface_data
 
 
