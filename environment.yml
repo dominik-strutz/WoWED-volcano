@@ -1,4 +1,4 @@
-# run: conda env create --file wowved_volcano.yml
+# run: conda env create --file environment.yml
 name: wowved_volcano
 channels:
   - conda-forge

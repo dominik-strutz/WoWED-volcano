@@ -43,6 +43,10 @@ After installing the required packages, you can start the Jupyter notebook serve
 ```bash
 jupyter notebook
 ```
+or
+```bash
+        jupyter lab
+```
 
 This will open a new tab in your browser where you can navigate to the notebooks and start using them.
 
