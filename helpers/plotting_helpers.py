@@ -838,6 +838,7 @@ def plot_design(ax, design, **kwargs):
     ax.legend(
         facecolor="w",
         edgecolor="k",
+        loc="upper right",
     )
 
     return ax
