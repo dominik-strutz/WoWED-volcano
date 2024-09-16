@@ -45,7 +45,7 @@ jupyter notebook
 ```
 or
 ```bash
-        jupyter lab
+jupyter lab
 ```
 
 This will open a new tab in your browser where you can navigate to the notebooks and start using them.
