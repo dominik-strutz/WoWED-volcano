@@ -1,0 +1,9 @@
+# This file lists all the Python packages that are required by the project
+# Run `pip install -r requirements.txt` to install all required packages
+pygad
+utm
+ipympl
+bqplot
+ipywidgets
+ipyleaflet
+pykonal
