@@ -14,7 +14,15 @@ The easiest way of getting started is through our colab notebooks:
 
 | Example | Link |
 | --- | --- |
-| basic interactive notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/example_design_process.ipynb)    |
+| main interactive notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/example_design_process.ipynb)    |
+
+The following notebooks are also available, but are, while still functional, not yet as well presented as the main notebook. They are also computationally more expensive and might take longer to run, so we recommend to run them on a local machine.
+
+| Example | Link |
+| --- | --- |
+| layered seismic velocity model | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/layered_vel_notebook.ipynb)    |
+| 3D seismic velocity model | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/het_vel_notebook.ipynb)    |
+| posterior uncertainty as function of receiver number | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/uncertainty_goal_notebook.ipynb)    |
 
 
 ## Local Installation
