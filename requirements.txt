@@ -4,6 +4,7 @@ pygad
 utm
 ipympl
 pykonal
+mpire
 ipywidgets
 ipyleaflet
 bqplot

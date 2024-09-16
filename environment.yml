@@ -26,6 +26,9 @@ dependencies:
 - scikit-image
 - pygad
 
+# parrallel processing
+- mpire
+
 - pip:
   - utm
   - ipympl
