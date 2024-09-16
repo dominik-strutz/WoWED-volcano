@@ -3,10 +3,10 @@
 pygad
 utm
 ipympl
-bqplot
+pykonal
 ipywidgets
 ipyleaflet
-pykonal
+bqplot
 tqdm
 jupyter
 jupyterlab
