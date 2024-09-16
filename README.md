@@ -4,9 +4,7 @@
 
 World Wide Experimental Design (WoWED) for volcano seismic monitoring is a collection of Jupiter notebooks that make the design of volcano seismic monitoring networks easy and intuitive. The notebooks and helper functions aim to allow fast and accuarate design of monitoring networks for volcanoes in an interactive way. A detailed description of the methods and the notebooks can be found in the following publication:
 <!-- currently in progress -->
-```
-Strutz and Curtis, 2024, Near-real-time design of experiments for seismic monitoring of volcanoes, *in preparation*
-```
+* Strutz and Curtis, 2024, Near-real-time design of experiments for seismic monitoring of volcanoes, *in preparation*
 
 ## Getting Started
 
