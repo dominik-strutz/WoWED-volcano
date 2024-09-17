@@ -14,7 +14,7 @@ The easiest way of getting started is through our colab notebooks:
 | --- | --- |
 | main interactive notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/main_design_process.ipynb)    |
 
-The following notebooks are also available, but are, while still functional, not yet as well presented as the main notebook. They are also computationally more expensive and might take longer to run, so we recommend to run them on a local machine.
+The following notebooks are also available, but while functional, are not yet as well presented as the main notebook. They are also computationally more expensive and might take longer to run, so we recommend to run them on a local machine.
 
 | Example | Link |
 | --- | --- |
