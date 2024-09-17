@@ -231,6 +231,9 @@ class Design_Optimisation:
 
         self.design_points_dict = design_points_dict
         self.design_points_mask_dict = design_points_mask_dict
+        
+        self.previous_best_design = None
+        self.previous_info = None
 
     def _construct_design_points(
         self, design_space, surface_data, receiver_type="node"
@@ -370,6 +373,11 @@ class Design_Optimisation:
             if "array" in d[0]:
                 d[1] = d[1][:3]
 
+        self.previous_best_design = best_design
+        self.previous_info = info
+        
+        
+
         return best_design, info
 
     def _differential_evolution_optimisation(
@@ -497,6 +505,20 @@ class Design_Optimisation:
 
         plot_fitness = optimisation_kwargs.pop("plot_fitness", False)
         progress_bar = optimisation_kwargs.pop("progress_bar", True)
+        improve_previous = optimisation_kwargs.pop("improve_previous", False)
+        
+        if improve_previous:
+            if self.previous_best_design is not None:
+                initial_population = []
+                for i in range(optimisation_kwargs['sol_per_pop']):
+       
+                    initial_population.append(
+                        self.previous_info['ga_instance'].last_generation_parents[i%len(self.previous_info['ga_instance'].last_generation_parents)]
+                    )
+            else:
+                raise ValueError("No previous design available to improve")
+        else:
+            initial_population = None
 
         gene_space = []
         for station in available_stations:
@@ -545,6 +567,7 @@ class Design_Optimisation:
                 fitness_func=fitness_function,
                 gene_space=gene_space,
                 on_generation=on_generation,
+                initial_population=initial_population,
                 **optimisation_kwargs,
             )
 
@@ -571,7 +594,19 @@ class Design_Optimisation:
             fitness = np.array(ga_instance.best_solutions_fitness)
 
             fig, ax = plt.subplots(figsize=(6, 4), dpi=120)
-            ax.plot(fitness, color="black", linewidth=2)
+            if improve_previous:
+                ax.plot(
+                    np.arange(len(self.previous_info['ga_instance'].best_solutions_fitness)),
+                    self.previous_info['ga_instance'].best_solutions_fitness,
+                    color="grey", linewidth=1, linestyle='--')
+                ax.plot(
+                    np.arange(len(fitness)) + len(self.previous_info['ga_instance'].best_solutions_fitness) - 1,
+                    fitness,
+                    color="red", linewidth=2)
+                ax.legend(["previous optimisation", "current optimisation"])
+                
+            else:
+                ax.plot(fitness, color="black", linewidth=2)
             ax.set_xlabel("Generation")
             ax.set_ylabel("DN criterion")
 
