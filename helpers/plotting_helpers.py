@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -1377,6 +1378,8 @@ def _interactive_design_plot_posterior(
             "",
             "running...",
         ]
+        
+        time.sleep(0.5)
 
         index = _scatter.names.item()
 
