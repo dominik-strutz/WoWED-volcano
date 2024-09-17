@@ -918,7 +918,10 @@ def _interactive_design_plot_plain(
     eig_criterion,
     prior_information,
     **kwargs,
-):
+    ):
+    
+    import ipywidgets as widgets
+
     changing_design = list(original_design.copy())
     changing_design = [
         [sta_type, np.array(sta_data)] for sta_type, sta_data in changing_design
@@ -1076,18 +1079,34 @@ def _interactive_design_plot_plain(
         index = _scatter.names.item()
         sta_typ = "array" if "array" in changing_design[index][0] else "node"
 
-        new_location = np.array([event["point"]["x"] * 1e3, event["point"]["y"] * 1e3])
+        new_location = np.array(
+            [event["point"]["x"] * 1e3, event["point"]["y"] * 1e3]
+        )
         new_elevation = get_elevation(new_location * 1e-3, surface_data)
         new_location = np.append(new_location, new_elevation)
 
-        # check if new location is in design space
-        in_ds = (
-            design_space_dict[sta_typ]
-            .sel(E=new_location[0], N=new_location[1], method="nearest")
-            .values
-        )
-
         changing_design[index][1] = new_location
+
+        for sta_type, sta_data in changing_design:
+            if "array" in sta_type:
+                in_ds = (
+                    design_space_dict["array"]
+                    .sel(E=sta_data[0], N=sta_data[1], method="nearest")
+                    .values
+                )
+                if not in_ds:
+                    break
+            # if its not an array, it must be a node
+            else:
+                in_ds = (
+                    design_space_dict["node"]
+                    .sel(E=sta_data[0], N=sta_data[1], method="nearest")
+                    .values
+                )
+
+                if not in_ds:
+                    break
+
         eig = eig_criterion(changing_design)
 
         post_information = eig + prior_information
@@ -1106,7 +1125,9 @@ def _interactive_design_plot_plain(
     for i, scat in enumerate(scat_list):
         scat.on_drag_end(update_line)
 
-    return fig, changing_design, None
+
+
+    return widgets.VBox([fig]), changing_design, None
 
 
 def _interactive_design_plot_posterior(
