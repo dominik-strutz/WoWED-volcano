@@ -15,7 +15,7 @@ import utm
 
 def choose_volcano(default_volcano='Etna'):
     
-    volcano_data = pd.read_csv("data/GVP_Volcano_List.csv", header=1)
+    volcano_data = pd.read_csv("data/GVP_Volcano_List_Holocene.csv", header=1, engine='python', encoding='latin-1')
     select_volcano = widgets.Combobox(
             value=default_volcano,
             placeholder='Choose Someone',
@@ -53,7 +53,27 @@ def get_volcano_data(volcano_name):
      'lon': -155.287}
     """
 
-    volcanoe_data = pd.read_csv("data/GVP_Volcano_List.csv", header=1)
+    volcanoe_data = pd.read_csv("data/GVP_Volcano_List_Holocene.csv", header=1, engine='python', encoding='latin-1')
+    
+    # Last Known Eruption from julian (ad, bc, bce) to datetime
+    last_known_erruption = []
+    for date in volcanoe_data["Last Known Eruption"]:
+        if isinstance(date, str):            
+            if date == "Unknown":
+                year = np.nan
+            elif 'BC' in date or 'BCE' in date:
+                year = int(date.split()[0])
+                year = -year
+                
+            elif 'AD' in date or 'CE' in date:
+                year = int(date.split()[0])
+            else:
+                raise ValueError(f"Unknown date format: {date}")
+
+            last_known_erruption.append(year)
+        
+    volcanoe_data["Last Known Eruption"] = last_known_erruption
+    
     # remove everything between parentheses including parentheses
     volcanoe_data["Primary Volcano Type"] = [
         re.sub(r"\([^)]*\)", "", t)

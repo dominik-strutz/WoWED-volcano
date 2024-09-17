@@ -18,8 +18,8 @@ The following notebooks are also available, but are, while still functional, not
 
 | Example | Link |
 | --- | --- |
-| layered seismic velocity model | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/layered_vel_notebook.ipynb)    |
-| 3D seismic velocity model | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/het_vel_notebook.ipynb)    |
+| 1D layered seismic velocity model | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/layered_vel_notebook.ipynb)    |
+| 3D heterogeneous seismic velocity model | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/het_vel_notebook.ipynb)    |
 | posterior uncertainty as function of receiver number | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dominik-strutz/WoWED-volcano/blob/main/uncertainty_goal_notebook.ipynb)    |
 
 
@@ -27,12 +27,12 @@ The following notebooks are also available, but are, while still functional, not
 
 To use the notebooks locally, you can clone the repository and install the required packages. The following commands will clone the repository and install the required packages:
 
-### Using conda
+### Using Conda
 ```bash
 git clone https://github.com/dominik-strutz/WoWED-volcano
 cd WoWED-volcano
 conda env create -f environment.yml
-conda activate WoWED-volcano
+conda activate wowved_volcano
 ```
 
 ### Using pip
