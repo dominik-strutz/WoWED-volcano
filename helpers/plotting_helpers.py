@@ -1069,64 +1069,62 @@ def _interactive_design_plot_plain(
     )
 
     def update_line(_scatter, event):
-        # with scat.hold_sync():
-        label.text = [
-            "Design Statistics:",
-            "",
-            "",
-            "running...",
-        ]
+        with scat.hold_sync():
+            label.text = [
+                "Design Statistics:",
+                "",
+                "",
+                "running...",
+            ]
 
-        index = _scatter.names.item()
-        sta_typ = "array" if "array" in changing_design[index][0] else "node"
+            index = _scatter.names.item()
+            sta_typ = "array" if "array" in changing_design[index][0] else "node"
 
-        new_location = np.array(
-            [event["point"]["x"] * 1e3, event["point"]["y"] * 1e3]
-        )
-        new_elevation = get_elevation(new_location * 1e-3, surface_data)
-        new_location = np.append(new_location, new_elevation)
+            new_location = np.array(
+                [event["point"]["x"] * 1e3, event["point"]["y"] * 1e3]
+            )
+            new_elevation = get_elevation(new_location * 1e-3, surface_data)
+            new_location = np.append(new_location, new_elevation)
 
-        changing_design[index][1] = new_location
+            changing_design[index][1] = new_location
 
-        for sta_type, sta_data in changing_design:
-            if "array" in sta_type:
-                in_ds = (
-                    design_space_dict["array"]
-                    .sel(E=sta_data[0], N=sta_data[1], method="nearest")
-                    .values
-                )
-                if not in_ds:
-                    break
-            # if its not an array, it must be a node
-            else:
-                in_ds = (
-                    design_space_dict["node"]
-                    .sel(E=sta_data[0], N=sta_data[1], method="nearest")
-                    .values
-                )
+            for sta_type, sta_data in changing_design:
+                if "array" in sta_type:
+                    in_ds = (
+                        design_space_dict["array"]
+                        .sel(E=sta_data[0], N=sta_data[1], method="nearest")
+                        .values
+                    )
+                    if not in_ds:
+                        break
+                # if its not an array, it must be a node
+                else:
+                    in_ds = (
+                        design_space_dict["node"]
+                        .sel(E=sta_data[0], N=sta_data[1], method="nearest")
+                        .values
+                    )
 
-                if not in_ds:
-                    break
+                    if not in_ds:
+                        break
 
-        eig = eig_criterion(changing_design)
+            eig = eig_criterion(changing_design)
 
-        post_information = eig + prior_information
-        k = 3
-        std = np.exp(
-            (post_information + k / 2 + k / 2 * np.log(2 * np.pi)) / (-0.5 * k * 2)
-        )
+            post_information = eig + prior_information
+            k = 3
+            std = np.exp(
+                (post_information + k / 2 + k / 2 * np.log(2 * np.pi)) / (-0.5 * k * 2)
+            )
 
-        label.text = [
-            "Design Statistics:",
-            f"EIG: {eig:.3f} nats",
-            f"Approx std: {std:.0f} m",
-            "" if in_ds else "Current location is not in design space",
-        ]
+            label.text = [
+                "Design Statistics:",
+                f"EIG: {eig:.3f} nats",
+                f"Approx std: {std:.0f} m",
+                "" if in_ds else "Current location is not in design space",
+            ]
 
     for i, scat in enumerate(scat_list):
         scat.on_drag_end(update_line)
-
-
 
     return widgets.VBox([fig]), changing_design, None
 
