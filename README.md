@@ -32,7 +32,7 @@ To use the notebooks locally, you can clone the repository and install the requi
 git clone https://github.com/dominik-strutz/WoWED-volcano
 cd WoWED-volcano
 conda env create -f environment.yml
-conda activate wowved_volcano
+conda activate wowed_volcano
 ```
 
 ### Using pip
